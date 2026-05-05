@@ -8,7 +8,6 @@ import streamlit as st
 from bokeh.models.widgets import Button
 from bokeh.models import CustomJS
 from streamlit_bokeh_events import streamlit_bokeh_events
-from PIL import Image
 import time
 import glob
 import paho.mqtt.client as paho
@@ -349,17 +348,6 @@ st.markdown("""
 col_izq, col_der = st.columns([3, 2], gap="large")
 
 with col_izq:
-    # ── Imagen ────────────────────────────────
-    try:
-        image = Image.open("voice_ctrl.jpg")
-        st.image(image, width=220)
-    except FileNotFoundError:
-        st.markdown(
-            '<div style="width:220px; height:140px; background:#fff9c4; border:2px dashed #f9a825; '
-            'border-radius:8px; display:flex; align-items:center; justify-content:center; '
-            'color:#f57f17; font-size:2.5rem;">🎙️</div>',
-            unsafe_allow_html=True)
-
     # ── Encabezado de sección (solo HTML cerrado) ────
     st.markdown("""
         <div class="section-card">
@@ -374,7 +362,6 @@ with col_izq:
     import streamlit.components.v1 as components
     components.html("""
         <script>
-        // Transparenta el body del iframe padre (este mismo documento)
         document.body.style.background = 'transparent';
         document.documentElement.style.background = 'transparent';
         </script>
@@ -384,9 +371,9 @@ with col_izq:
     """, height=0)
 
     stt_button = Button(
-        label="▶  Iniciar escucha",
-        width=400,
-        button_type="warning",   # color más cercano al dorado en Bokeh clásico
+        label="▶   Iniciar escucha",
+        width=700,
+        button_type="warning",
     )
 
     stt_button.js_on_event("button_click", CustomJS(code="""
