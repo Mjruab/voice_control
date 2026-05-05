@@ -139,26 +139,45 @@ hr { border-color: #ffe082 !important; }
     box-shadow: none !important;
     border-radius: 8px !important;
     font-weight: 700 !important;
-    font-size: 1.05rem !important;
+    font-size: 1.15rem !important;
     font-family: 'Inter', sans-serif !important;
-    padding: 14px 32px !important;
+    padding: 16px 40px !important;
     cursor: pointer !important;
     transition: background 0.2s ease !important;
     width: 100% !important;
+    min-height: 54px !important;
 }
 .bk-btn-type-warning:hover,
 .bk-btn:hover {
     background: #f57f17 !important;
     box-shadow: 0 3px 14px rgba(249,168,37,0.45) !important;
 }
-/* Quitar borde/contorno del contenedor Bokeh */
-.bk-toolbar-box, .bk, .bk-canvas, .bk-root,
-.streamlit-bokeh-events > div,
-.streamlit-bokeh-events iframe {
+/* Eliminar fondo blanco del iframe y contenedores Bokeh */
+.bk-toolbar-box, .bk, .bk-root, .bk-canvas {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
     background: transparent !important;
+}
+iframe[title="streamlit_bokeh_events"] {
+    background: transparent !important;
+    border: none !important;
+}
+/* Selector genérico para iframes de componentes Streamlit */
+[data-testid="stCustomComponentV1"] iframe,
+.element-container iframe {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+/* Forzar fondo del body dentro del iframe vía atributo allowtransparency */
+.streamlit-bokeh-events,
+.streamlit-bokeh-events > *,
+.streamlit-bokeh-events iframe {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* ── Componentes personalizados ── */
@@ -341,15 +360,28 @@ with col_izq:
             'color:#f57f17; font-size:2.5rem;">🎙️</div>',
             unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    # ── Encabezado de sección (solo HTML cerrado) ────
+    st.markdown("""
+        <div class="section-card">
+            <h3 style="margin:0 0 6px 0;">🎤 Reconocimiento de Voz</h3>
+            <p style="color:#6b7280;font-size:0.9rem;margin:0;">
+                Toca el botón y habla. El texto reconocido se publicará automáticamente al broker MQTT.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
 
-    # ── Botón STT ─────────────────────────────
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.markdown("### 🎤 Reconocimiento de Voz")
-    st.markdown(
-        '<p style="color:#6b7280; font-size:0.9rem; margin-bottom:16px;">'
-        'Toca el botón y habla. El texto reconocido se publicará automáticamente al broker MQTT.'
-        '</p>', unsafe_allow_html=True)
+    # Inyectar CSS en el iframe de Bokeh para quitar el fondo blanco
+    import streamlit.components.v1 as components
+    components.html("""
+        <script>
+        // Transparenta el body del iframe padre (este mismo documento)
+        document.body.style.background = 'transparent';
+        document.documentElement.style.background = 'transparent';
+        </script>
+        <style>
+            html, body { background: transparent !important; margin: 0; padding: 0; }
+        </style>
+    """, height=0)
 
     stt_button = Button(
         label="▶  Iniciar escucha",
@@ -384,16 +416,16 @@ with col_izq:
         override_height=90,
         debounce_time=0,
     )
-    st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Resultado de voz ───────────────────────
     if result and "GET_TEXT" in result:
         texto_voz = result.get("GET_TEXT").strip()
 
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown("### 💬 Texto Reconocido")
         st.markdown(
-            f'<div class="msg-bubble">🎙️ &nbsp;<strong>{texto_voz}</strong></div>',
+            f'<div class="section-card">'
+            f'<h3 style="margin:0 0 10px 0;">💬 Texto Reconocido</h3>'
+            f'<div class="msg-bubble">🎙️ &nbsp;<strong>{texto_voz}</strong></div>'
+            f'</div>',
             unsafe_allow_html=True)
 
         # Traducción opcional
@@ -443,8 +475,6 @@ with col_izq:
                 f'<div class="status-err">⚠️ No se pudo generar audio: {e}</div>',
                 unsafe_allow_html=True)
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
         # Guardar en historial de sesión
         if "historial" not in st.session_state:
             st.session_state["historial"] = []
@@ -455,39 +485,45 @@ with col_izq:
         })
 
 with col_der:
-    # ── Instrucciones ─────────────────────────
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.markdown("### 📖 Instrucciones de uso")
-    for i, paso in enumerate([
+    # ── Instrucciones — bloque HTML completo y cerrado ────────
+    pasos = [
         "Configura el broker y topic en el panel lateral.",
         "Haz clic en <strong>▶ Iniciar escucha</strong> y otorga permisos de micrófono.",
         "Habla claramente; el texto aparecerá al detectar silencio.",
         "El mensaje se publica automáticamente al broker MQTT.",
         "Activa <em>Traducir</em> para enviar el texto en otro idioma.",
-    ], 1):
-        st.markdown(
-            f'<div class="info-item">'
-            f'<span style="background:#f9a825;color:#fff;border-radius:50%;width:22px;height:22px;'
-            f'display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;'
-            f'font-weight:700;flex-shrink:0;">{i}</span>'
-            f'<span style="font-size:0.88rem;color:#4a5568;">{paso}</span>'
-            f'</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    ]
+    items_html = "".join([
+        f'<div class="info-item">'
+        f'<span style="background:#f9a825;color:#fff;border-radius:50%;width:22px;height:22px;'
+        f'display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;'
+        f'font-weight:700;flex-shrink:0;">{i}</span>'
+        f'<span style="font-size:0.88rem;color:#4a5568;">{paso}</span>'
+        f'</div>'
+        for i, paso in enumerate(pasos, 1)
+    ])
+    st.markdown(
+        f'<div class="section-card">'
+        f'<h3 style="margin:0 0 12px 0;">📖 Instrucciones de uso</h3>'
+        f'{items_html}'
+        f'</div>',
+        unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Casos de uso ──────────────────────────
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.markdown("### 💡 Aplicaciones")
-    for caso in [
-        "🤖 Robótica por voz",
-        "🏠 Domótica inteligente",
-        "♿ Accesibilidad",
-        "🏭 Control industrial",
-        "📱 IoT interactivo",
-    ]:
-        st.markdown(f'<span class="uso-tag">{caso}</span>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    # ── Aplicaciones — bloque HTML completo y cerrado ─────────
+    casos = [
+        "🤖 Robótica por voz", "🏠 Domótica inteligente",
+        "♿ Accesibilidad", "🏭 Control industrial", "📱 IoT interactivo",
+    ]
+    tags_html = "".join([f'<span class="uso-tag">{c}</span>' for c in casos])
+    st.markdown(
+        f'<div class="section-card">'
+        f'<h3 style="margin:0 0 12px 0;">💡 Aplicaciones</h3>'
+        f'{tags_html}'
+        f'</div>',
+        unsafe_allow_html=True)
+
 
 st.divider()
 st.markdown(
