@@ -135,30 +135,18 @@ hr { border-color: #ffe082 !important; }
     background: #f9a825 !important;
     color: #ffffff !important;
     border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-    border-radius: 8px !important;
+    border-radius: 6px !important;
     font-weight: 700 !important;
-    font-size: 1.05rem !important;
+    font-size: 0.92rem !important;
     font-family: 'Inter', sans-serif !important;
-    padding: 14px 32px !important;
+    padding: 8px 18px !important;
     cursor: pointer !important;
     transition: background 0.2s ease !important;
-    width: 100% !important;
 }
 .bk-btn-type-warning:hover,
 .bk-btn:hover {
     background: #f57f17 !important;
-    box-shadow: 0 3px 14px rgba(249,168,37,0.45) !important;
-}
-/* Quitar borde/contorno del contenedor Bokeh */
-.bk-toolbar-box, .bk, .bk-canvas, .bk-root,
-.streamlit-bokeh-events > div,
-.streamlit-bokeh-events iframe {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
+    box-shadow: 0 2px 12px rgba(249,168,37,0.4) !important;
 }
 
 /* ── Componentes personalizados ── */
@@ -353,7 +341,7 @@ with col_izq:
 
     stt_button = Button(
         label="▶  Iniciar escucha",
-        width=400,
+        width=260,
         button_type="warning",   # color más cercano al dorado en Bokeh clásico
     )
 
@@ -381,7 +369,7 @@ with col_izq:
         events="GET_TEXT",
         key="listen",
         refresh_on_update=False,
-        override_height=90,
+        override_height=75,
         debounce_time=0,
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -455,23 +443,32 @@ with col_izq:
         })
 
 with col_der:
-    # ── Instrucciones ─────────────────────────
+    # ── Métricas ───────────────────────────────
+    historial = st.session_state.get("historial", [])
+    m1, m2 = st.columns(2)
+    m1.metric("🎙️ Mensajes enviados", len(historial))
+    m2.metric("📡 Broker", broker.split(".")[0].upper())
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Historial ─────────────────────────────
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.markdown("### 📖 Instrucciones de uso")
-    for i, paso in enumerate([
-        "Configura el broker y topic en el panel lateral.",
-        "Haz clic en <strong>▶ Iniciar escucha</strong> y otorga permisos de micrófono.",
-        "Habla claramente; el texto aparecerá al detectar silencio.",
-        "El mensaje se publica automáticamente al broker MQTT.",
-        "Activa <em>Traducir</em> para enviar el texto en otro idioma.",
-    ], 1):
+    st.markdown("### 📋 Historial de Sesión")
+    if historial:
+        for entry in reversed(historial[-10:]):
+            st.markdown(
+                f'<div class="log-row">'
+                f'<span class="log-ts">{entry["ts"]}</span>'
+                f'<span style="flex:1;">{entry["texto"]}</span>'
+                f'</div>', unsafe_allow_html=True)
+        if st.button("🗑️ Limpiar historial"):
+            st.session_state["historial"] = []
+            st.rerun()
+    else:
         st.markdown(
-            f'<div class="info-item">'
-            f'<span style="background:#f9a825;color:#fff;border-radius:50%;width:22px;height:22px;'
-            f'display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;'
-            f'font-weight:700;flex-shrink:0;">{i}</span>'
-            f'<span style="font-size:0.88rem;color:#4a5568;">{paso}</span>'
-            f'</div>', unsafe_allow_html=True)
+            '<p style="color:#9ca3af; font-size:0.88rem; font-style:italic;">'
+            'Aún no hay mensajes en esta sesión.</p>',
+            unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -488,6 +485,19 @@ with col_der:
     ]:
         st.markdown(f'<span class="uso-tag">{caso}</span>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Instrucciones ─────────────────────────
+    with st.expander("📖 Instrucciones de uso"):
+        for i, paso in enumerate([
+            "Configura el broker y topic en el panel lateral.",
+            "Haz clic en **▶ Iniciar escucha** y otorga permisos de micrófono.",
+            "Habla claramente; el texto aparecerá al detectar silencio.",
+            "El mensaje se publica automáticamente al broker MQTT.",
+            "Activa *Traducir* para enviar el texto en otro idioma.",
+        ], 1):
+            st.markdown(f"**{i}.** {paso}")
 
 st.divider()
 st.markdown(
