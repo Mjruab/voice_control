@@ -1,3 +1,8 @@
+"""
+🎙️ Control por Voz — Interfaces Multimodales
+Tema amarillo pastel coherente con WordCloud Studio
+"""
+
 import os
 import streamlit as st
 from bokeh.models.widgets import Button
@@ -11,74 +16,488 @@ import json
 from gtts import gTTS
 from googletrans import Translator
 
-def on_publish(client,userdata,result):             #create function for callback
-    print("el dato ha sido publicado \n")
-    pass
+# ─────────────────────────────────────────────
+# CONFIGURACIÓN DE PÁGINA
+# ─────────────────────────────────────────────
+st.set_page_config(
+    page_title="Control por Voz",
+    page_icon="🎙️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ─────────────────────────────────────────────
+# ESTILOS — tema amarillo pastel (igual a WordCloud Studio)
+# ─────────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+
+/* Fondo general */
+.stApp { background-color: #fffde7; color: #333333; }
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background-color: #fff9c4 !important;
+    border-right: 1px solid #f9a825;
+}
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    color: #f57f17 !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+}
+[data-testid="stSidebar"] label {
+    color: #4a5568 !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+}
+
+/* Inputs */
+textarea, input[type="text"] {
+    background-color: #fffff0 !important;
+    border: 1px solid #f9a825 !important;
+    border-radius: 6px !important;
+    color: #111827 !important;
+    font-size: 0.9rem !important;
+}
+
+/* Headings */
+h1 {
+    color: #f57f17 !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+}
+h2, h3 { color: #e65100 !important; font-weight: 600 !important; }
+
+/* Botón principal Streamlit */
+.stButton > button {
+    background: #f9a825 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    padding: 0.6rem 1.4rem !important;
+    width: 100% !important;
+    transition: background 0.2s ease !important;
+}
+.stButton > button:hover {
+    background: #f57f17 !important;
+    box-shadow: 0 2px 12px rgba(249,168,37,0.35) !important;
+}
+
+/* Métricas */
+[data-testid="metric-container"] {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-top: 3px solid #f9a825;
+    border-radius: 8px;
+    padding: 18px 22px;
+    box-shadow: 0 1px 4px rgba(249,168,37,0.1);
+}
+[data-testid="metric-container"] label {
+    color: #f57f17 !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+}
+[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    color: #333333 !important;
+    font-weight: 700 !important;
+    font-size: 1.55rem !important;
+}
+
+/* Alerts / info boxes */
+[data-testid="stAlert"] {
+    background: #fff8e1 !important;
+    border: 1px solid #ffe082 !important;
+    border-radius: 8px !important;
+    color: #333333 !important;
+}
+
+/* Expander */
+div[data-testid="stExpander"] {
+    border: 1px solid #ffe082 !important;
+    border-radius: 8px !important;
+    background: #fff8e1 !important;
+}
+
+hr { border-color: #ffe082 !important; }
+
+/* ── Componentes personalizados ── */
+
+.header-card {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-left: 5px solid #f9a825;
+    border-radius: 8px;
+    padding: 28px 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 6px rgba(249,168,37,0.12);
+}
+
+.section-card {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+}
+
+.msg-bubble {
+    background: #fff9c4;
+    border: 1px solid #f9a825;
+    border-left: 4px solid #f57f17;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 8px 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.92rem;
+    color: #333333;
+}
+
+.status-ok {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-left: 4px solid #22c55e;
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin: 8px 0;
+    font-size: 0.88rem;
+    color: #166534;
+    font-weight: 500;
+}
+
+.status-err {
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    border-left: 4px solid #f97316;
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin: 8px 0;
+    font-size: 0.88rem;
+    color: #9a3412;
+    font-weight: 500;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #fffde7;
+    border: 1px solid #ffe082;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.uso-tag {
+    display: inline-block;
+    background: #fff3cd;
+    border: 1px solid #ffe082;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #e65100;
+    margin: 4px 3px;
+}
+
+.log-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    margin: 4px 0;
+    background: #fffde7;
+    border: 1px solid #ffe082;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.84rem;
+    color: #4a5568;
+}
+.log-ts {
+    color: #f57f17;
+    font-weight: 600;
+    min-width: 80px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────
+# MQTT — callbacks
+# ─────────────────────────────────────────────
+message_received = ""
+
+def on_publish(client, userdata, result):
+    print("✅ Dato publicado vía MQTT\n")
 
 def on_message(client, userdata, message):
     global message_received
     time.sleep(2)
-    message_received=str(message.payload.decode("utf-8"))
+    message_received = str(message.payload.decode("utf-8"))
     st.write(message_received)
 
-broker="broker.mqttdashboard.com"
-port=1883
-client1= paho.Client("GIT-HUBC")
-client1.on_message = on_message
+# ─────────────────────────────────────────────
+# CONFIGURACIÓN MQTT (sidebar)
+# ─────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("## 🎙️ Control por Voz")
+    st.divider()
 
+    st.markdown("### CONFIGURACIÓN MQTT")
+    broker = st.text_input("Broker:", value="broker.mqttdashboard.com")
+    port   = st.number_input("Puerto:", value=1883, step=1, format="%d")
+    topic  = st.text_input("Topic:", value="voice_ctrl")
+    client_id = st.text_input("Client ID:", value="GIT-HUBC")
 
+    st.divider()
 
-st.title("INTERFACES MULTIMODALES")
-st.subheader("CONTROL POR VOZ")
+    st.markdown("### OPCIONES DE VOZ")
+    idioma_gtts = st.selectbox("Idioma gTTS:", ["es", "en", "fr", "pt", "de"])
+    traducir    = st.checkbox("Traducir mensaje antes de publicar", value=False)
+    if traducir:
+        idioma_dest = st.selectbox("Traducir a:", ["en", "es", "fr", "pt", "de"])
 
-image = Image.open('voice_ctrl.jpg')
+    st.divider()
 
-st.image(image, width=200)
+    st.markdown("### INFORMACIÓN")
+    st.markdown(
+        '<div class="info-item">'
+        '<span style="font-size:1.1rem;">📡</span>'
+        '<div><strong style="color:#e65100; font-size:0.85rem;">Broker activo</strong>'
+        f'<p style="margin:2px 0 0 0; color:#6b7280; font-size:0.8rem;">{broker}:{port}</p></div>'
+        '</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="info-item">'
+        '<span style="font-size:1.1rem;">📢</span>'
+        '<div><strong style="color:#e65100; font-size:0.85rem;">Topic de publicación</strong>'
+        f'<p style="margin:2px 0 0 0; color:#6b7280; font-size:0.8rem;">{topic}</p></div>'
+        '</div>', unsafe_allow_html=True)
 
+# ─────────────────────────────────────────────
+# HEADER
+# ─────────────────────────────────────────────
+st.markdown("""
+<div class="header-card">
+    <h1 style="margin:0; font-size:1.9rem;">🎙️ Control por Voz</h1>
+    <p style="margin:6px 0 0 0; color:#f57f17; font-size:0.97rem;">
+        Interfaces Multimodales — Reconocimiento de voz y publicación MQTT en tiempo real
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
+# ─────────────────────────────────────────────
+# LAYOUT PRINCIPAL
+# ─────────────────────────────────────────────
+col_izq, col_der = st.columns([3, 2], gap="large")
 
+with col_izq:
+    # ── Imagen ────────────────────────────────
+    try:
+        image = Image.open("voice_ctrl.jpg")
+        st.image(image, width=220)
+    except FileNotFoundError:
+        st.markdown(
+            '<div style="width:220px; height:140px; background:#fff9c4; border:2px dashed #f9a825; '
+            'border-radius:8px; display:flex; align-items:center; justify-content:center; '
+            'color:#f57f17; font-size:2.5rem;">🎙️</div>',
+            unsafe_allow_html=True)
 
-st.write("Toca el Botón y habla ")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-stt_button = Button(label=" Inicio ", width=200)
+    # ── Botón STT ─────────────────────────────
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("### 🎤 Reconocimiento de Voz")
+    st.markdown(
+        '<p style="color:#6b7280; font-size:0.9rem; margin-bottom:16px;">'
+        'Toca el botón y habla. El texto reconocido se publicará automáticamente al broker MQTT.'
+        '</p>', unsafe_allow_html=True)
 
-stt_button.js_on_event("button_click", CustomJS(code="""
-    var recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
- 
-    recognition.onresult = function (e) {
-        var value = "";
-        for (var i = e.resultIndex; i < e.results.length; ++i) {
-            if (e.results[i].isFinal) {
-                value += e.results[i][0].transcript;
+    stt_button = Button(
+        label="▶  Iniciar escucha",
+        width=260,
+        stylesheets=["""
+            .bk-btn {
+                background: #f9a825 !important;
+                color: #ffffff !important;
+                border: none !important;
+                border-radius: 6px !important;
+                font-weight: 700 !important;
+                font-size: 0.95rem !important;
+                font-family: 'Inter', sans-serif !important;
+                padding: 10px 20px !important;
+                cursor: pointer !important;
+                transition: background 0.2s !important;
+            }
+            .bk-btn:hover {
+                background: #f57f17 !important;
+                box-shadow: 0 2px 12px rgba(249,168,37,0.4) !important;
+            }
+        """]
+    )
+
+    stt_button.js_on_event("button_click", CustomJS(code="""
+        var recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onresult = function (e) {
+            var value = "";
+            for (var i = e.resultIndex; i < e.results.length; ++i) {
+                if (e.results[i].isFinal) {
+                    value += e.results[i][0].transcript;
+                }
+            }
+            if (value != "") {
+                document.dispatchEvent(new CustomEvent("GET_TEXT", {detail: value}));
             }
         }
-        if ( value != "") {
-            document.dispatchEvent(new CustomEvent("GET_TEXT", {detail: value}));
-        }
-    }
-    recognition.start();
+        recognition.start();
     """))
 
-result = streamlit_bokeh_events(
-    stt_button,
-    events="GET_TEXT",
-    key="listen",
-    refresh_on_update=False,
-    override_height=75,
-    debounce_time=0)
+    result = streamlit_bokeh_events(
+        stt_button,
+        events="GET_TEXT",
+        key="listen",
+        refresh_on_update=False,
+        override_height=75,
+        debounce_time=0,
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-if result:
-    if "GET_TEXT" in result:
-        st.write(result.get("GET_TEXT"))
-        client1.on_publish = on_publish                            
-        client1.connect(broker,port)  
-        message =json.dumps({"Act1":result.get("GET_TEXT").strip()})
-        ret= client1.publish("voice_ctrl", message)
+    # ── Resultado de voz ───────────────────────
+    if result and "GET_TEXT" in result:
+        texto_voz = result.get("GET_TEXT").strip()
 
-    
-    try:
-        os.mkdir("temp")
-    except:
-        pass
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.markdown("### 💬 Texto Reconocido")
+        st.markdown(
+            f'<div class="msg-bubble">🎙️ &nbsp;<strong>{texto_voz}</strong></div>',
+            unsafe_allow_html=True)
+
+        # Traducción opcional
+        if traducir:
+            try:
+                translator = Translator()
+                traduccion = translator.translate(texto_voz, dest=idioma_dest).text
+                st.markdown(
+                    f'<div class="msg-bubble" style="border-color:#fbc02d;">'
+                    f'🌐 &nbsp;<em>{traduccion}</em></div>',
+                    unsafe_allow_html=True)
+                texto_a_publicar = traduccion
+            except Exception as e:
+                st.markdown(
+                    f'<div class="status-err">⚠️ Error al traducir: {e}</div>',
+                    unsafe_allow_html=True)
+                texto_a_publicar = texto_voz
+        else:
+            texto_a_publicar = texto_voz
+
+        # Publicar MQTT
+        try:
+            client1 = paho.Client(client_id)
+            client1.on_publish = on_publish
+            client1.connect(broker, int(port))
+            message_payload = json.dumps({"Act1": texto_a_publicar})
+            ret = client1.publish(topic, message_payload)
+            st.markdown(
+                f'<div class="status-ok">✅ Publicado en <strong>{topic}</strong> '
+                f'— código retorno: {ret.rc}</div>',
+                unsafe_allow_html=True)
+        except Exception as e:
+            st.markdown(
+                f'<div class="status-err">❌ Error MQTT: {e}</div>',
+                unsafe_allow_html=True)
+
+        # gTTS — audio de respuesta
+        try:
+            os.makedirs("temp", exist_ok=True)
+            tts = gTTS(text=texto_a_publicar, lang=idioma_gtts)
+            audio_path = "temp/respuesta.mp3"
+            tts.save(audio_path)
+            with open(audio_path, "rb") as f:
+                st.audio(f.read(), format="audio/mp3")
+        except Exception as e:
+            st.markdown(
+                f'<div class="status-err">⚠️ No se pudo generar audio: {e}</div>',
+                unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Guardar en historial de sesión
+        if "historial" not in st.session_state:
+            st.session_state["historial"] = []
+        st.session_state["historial"].append({
+            "ts": time.strftime("%H:%M:%S"),
+            "texto": texto_voz,
+            "topic": topic,
+        })
+
+with col_der:
+    # ── Métricas ───────────────────────────────
+    historial = st.session_state.get("historial", [])
+    m1, m2 = st.columns(2)
+    m1.metric("🎙️ Mensajes enviados", len(historial))
+    m2.metric("📡 Broker", broker.split(".")[0].upper())
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Historial ─────────────────────────────
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("### 📋 Historial de Sesión")
+    if historial:
+        for entry in reversed(historial[-10:]):
+            st.markdown(
+                f'<div class="log-row">'
+                f'<span class="log-ts">{entry["ts"]}</span>'
+                f'<span style="flex:1;">{entry["texto"]}</span>'
+                f'</div>', unsafe_allow_html=True)
+        if st.button("🗑️ Limpiar historial"):
+            st.session_state["historial"] = []
+            st.rerun()
+    else:
+        st.markdown(
+            '<p style="color:#9ca3af; font-size:0.88rem; font-style:italic;">'
+            'Aún no hay mensajes en esta sesión.</p>',
+            unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Casos de uso ──────────────────────────
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("### 💡 Aplicaciones")
+    for caso in [
+        "🤖 Robótica por voz",
+        "🏠 Domótica inteligente",
+        "♿ Accesibilidad",
+        "🏭 Control industrial",
+        "📱 IoT interactivo",
+    ]:
+        st.markdown(f'<span class="uso-tag">{caso}</span>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Instrucciones ─────────────────────────
+    with st.expander("📖 Instrucciones de uso"):
+        for i, paso in enumerate([
+            "Configura el broker y topic en el panel lateral.",
+            "Haz clic en **▶ Iniciar escucha** y otorga permisos de micrófono.",
+            "Habla claramente; el texto aparecerá al detectar silencio.",
+            "El mensaje se publica automáticamente al broker MQTT.",
+            "Activa *Traducir* para enviar el texto en otro idioma.",
+        ], 1):
+            st.markdown(f"**{i}.** {paso}")
+
+st.divider()
+st.markdown(
+    '<p style="text-align:center; color:#9ca3af; font-size:0.8rem; font-family:IBM Plex Mono,monospace;">'
+    '🎙️ Control por Voz · Interfaces Multimodales · MQTT + gTTS + WebkitSpeechRecognition'
+    '</p>', unsafe_allow_html=True)
