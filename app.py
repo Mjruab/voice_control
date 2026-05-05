@@ -129,6 +129,26 @@ div[data-testid="stExpander"] {
 
 hr { border-color: #ffe082 !important; }
 
+/* ── Botón Bokeh — tema dorado ── */
+.bk-btn-type-warning,
+.bk-btn {
+    background: #f9a825 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    font-size: 0.92rem !important;
+    font-family: 'Inter', sans-serif !important;
+    padding: 8px 18px !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease !important;
+}
+.bk-btn-type-warning:hover,
+.bk-btn:hover {
+    background: #f57f17 !important;
+    box-shadow: 0 2px 12px rgba(249,168,37,0.4) !important;
+}
+
 /* ── Componentes personalizados ── */
 
 .header-card {
@@ -322,24 +342,7 @@ with col_izq:
     stt_button = Button(
         label="▶  Iniciar escucha",
         width=260,
-        stylesheets=["""
-            .bk-btn {
-                background: #f9a825 !important;
-                color: #ffffff !important;
-                border: none !important;
-                border-radius: 6px !important;
-                font-weight: 700 !important;
-                font-size: 0.95rem !important;
-                font-family: 'Inter', sans-serif !important;
-                padding: 10px 20px !important;
-                cursor: pointer !important;
-                transition: background 0.2s !important;
-            }
-            .bk-btn:hover {
-                background: #f57f17 !important;
-                box-shadow: 0 2px 12px rgba(249,168,37,0.4) !important;
-            }
-        """]
+        button_type="warning",   # color más cercano al dorado en Bokeh clásico
     )
 
     stt_button.js_on_event("button_click", CustomJS(code="""
