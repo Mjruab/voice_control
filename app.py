@@ -344,14 +344,12 @@ with col_izq:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── Botón STT ─────────────────────────────
-    st.markdown("""
-    <div class="section-card">
-        <h3 style="margin:0 0 6px 0;">🎤 Reconocimiento de Voz</h3>
-        <p style="color:#6b7280; font-size:0.9rem; margin:0 0 4px 0;">
-            Toca el botón y habla. El texto reconocido se publicará automáticamente al broker MQTT.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("### 🎤 Reconocimiento de Voz")
+    st.markdown(
+        '<p style="color:#6b7280; font-size:0.9rem; margin-bottom:16px;">'
+        'Toca el botón y habla. El texto reconocido se publicará automáticamente al broker MQTT.'
+        '</p>', unsafe_allow_html=True)
 
     stt_button = Button(
         label="▶  Iniciar escucha",
@@ -386,16 +384,16 @@ with col_izq:
         override_height=90,
         debounce_time=0,
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Resultado de voz ───────────────────────
     if result and "GET_TEXT" in result:
         texto_voz = result.get("GET_TEXT").strip()
 
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.markdown("### 💬 Texto Reconocido")
         st.markdown(
-            f'<div class="section-card">'
-            f'<h3 style="margin:0 0 10px 0;">💬 Texto Reconocido</h3>'
-            f'<div class="msg-bubble">🎙️ &nbsp;<strong>{texto_voz}</strong></div>'
-            f'</div>',
+            f'<div class="msg-bubble">🎙️ &nbsp;<strong>{texto_voz}</strong></div>',
             unsafe_allow_html=True)
 
         # Traducción opcional
@@ -444,6 +442,8 @@ with col_izq:
             st.markdown(
                 f'<div class="status-err">⚠️ No se pudo generar audio: {e}</div>',
                 unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Guardar en historial de sesión
         if "historial" not in st.session_state:
